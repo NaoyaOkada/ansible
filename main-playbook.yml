@@ -14,7 +14,7 @@
       yum: name=emacs-24.3-18* state=installed
 
     - name: set emacs config files
-      synchronize: src=templates/emacs/.emacs.d dest=/home/vagrant/
+      copy: src=templates/emacs/.emacs.d dest=/home/vagrant/ owner=vagrant group=vagrant
 
     - name: be sure tmux is installed
       yum: name=tmux state=installed
@@ -41,8 +41,8 @@
 
     - name: set emacs to git as default editor
       command: git config --global core.editor emacs
+      sudo: no
 
     - name: set color support to git
       command: git config --global color.ui true
-
-
+      sudo: no

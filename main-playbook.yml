@@ -1,0 +1,48 @@
+- hosts: dev-servers
+  become: yes
+  tasks:
+    - name: be sure rsync is installed
+      yum: name=rsync state=installed
+
+    - name: be sure httpd is installed
+      yum: name=httpd state=installed
+
+    - name: be sure httpd is running and enabled
+      service: name=httpd state=started enabled=yes
+
+    - name: be sure emacs is installed
+      yum: name=emacs-24.3-18* state=installed
+
+    - name: set emacs config files
+      synchronize: src=templates/emacs/.emacs.d dest=/home/vagrant/
+
+    - name: be sure tmux is installed
+      yum: name=tmux state=installed
+
+    - name: set tmux config file
+      copy: src=templates/tmux/.tmux.conf dest=/home/vagrant/.tmux.conf
+
+    - name: be sure zsh is installed
+      yum: name=zsh state=installed
+
+    - name: get zsh path
+      command: which zsh
+      sudo: no
+      register: zsh_path
+
+    - name: set zsh as default shell for vagrant user
+      command: chsh -s {{zsh_path.stdout}} vagrant
+
+    - name: set zsh comfig file
+      template: src=templates/zsh/.zshrc dest=/home/vagrant/.zshrc owner=vagrant group=vagrant
+
+    - name: be sure git is installed
+      yum: name=git state=installed
+
+    - name: set emacs to git as default editor
+      command: git config --global core.editor emacs
+
+    - name: set color support to git
+      command: git config --global color.ui true
+
+

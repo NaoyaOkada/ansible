@@ -1,0 +1,25 @@
+---
+- hosts: dev_server
+  become: yes
+  tasks:
+    - name: yum enable remi-php73
+      command: yum-config-manager --enable remi-php73
+
+    - name: yum install php and php relations
+      yum: name={{ item }} state=latest
+      with_items:
+        - php
+        - php-mcrypt
+        - php-cli
+        - php-gd
+        - php-curl
+        - php-mysql
+        - php-ldap
+        - php-zip
+        - php-fileinfo 
+      notify:
+        - restart apache
+
+  handlers:
+    - name: restart apache
+      service: name=httpd state=restarted

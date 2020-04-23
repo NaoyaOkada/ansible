@@ -2,23 +2,34 @@
 - hosts: dev_server
   become: yes
   tasks:
-    - name: be sure rsync is installed
-      yum: name=rsync state=latest
 
-    - name: be sure httpd is installed
-      yum: name=httpd state=latest
-
-    - name: be sure httpd is running and enabled
-      service: name=httpd state=started enabled=yes
-
-    - name: install some programs for development
+    - name: install some repos before installing some programs
       yum: name={{ item }} state=latest
       with_items:
-        - epel-release
+        - https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+        - http://rpms.remirepo.net/enterprise/remi-release-6.rpm
+
+    - name: install some programs
+      yum: name={{ item }} state=latest
+      with_items:
         - gcc
-        - ncurses-devel
+        - tmux
+        - yum-utils
         - libselinux-python
+        - ncurses-devel
+        - git
+        - rsync
+        - zsh
         - unzip
+        - httpd
+        - mysql
+        - mysql-server
+
+    - name: start httpd and enabled
+      service: name=httpd state=started enabled=yes
+
+    - name: start mysqld and enabled
+      service: name=mysqld state=started enabled=yes
 
     - command: which emacs
       register: emacs_exit_result
@@ -47,14 +58,8 @@
     - name: set emacs config files
       copy: src=templates/emacs/.emacs.d dest=/home/vagrant/ owner=vagrant group=vagrant
 
-    - name: be sure tmux is installed
-      yum: name=tmux state=latest
-
     - name: set tmux config file
       copy: src=templates/tmux/.tmux.conf dest=/home/vagrant/.tmux.conf
-
-    - name: be sure zsh is installed
-      yum: name=zsh state=latest
 
     - name: get zsh path
       command: which zsh
@@ -65,9 +70,6 @@
 
     - name: set zsh comfig file
       template: src=templates/zsh/.zshrc dest=/home/vagrant/.zshrc owner=vagrant group=vagrant
-
-    - name: be sure git is installed
-      yum: name=git state=latest
 
     - name: set emacs to git as default editor
       command: git config --global core.editor emacs

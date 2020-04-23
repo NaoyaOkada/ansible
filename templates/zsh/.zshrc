@@ -48,7 +48,7 @@ precmd () { vcs_info }
 ########################################
 
 local current_dir='%B%F{blue}[%~]%f%b'
-local prompt_info='[%n@%F{green}{{ ansible_hostname }}%f %1~$vcs_info_msg_0_]'
+local prompt_info='[%n@%F{green}%m%f %1~$vcs_info_msg_0_]'
 local user_mark='%B%(?,%F{green},%F{red})%(!,#,$)%f%b '
 
 PROMPT="$prompt_info$user_mark"

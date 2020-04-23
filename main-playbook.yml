@@ -1,33 +1,63 @@
-- hosts: dev-servers
+---
+- hosts: dev_server
   become: yes
   tasks:
     - name: be sure rsync is installed
-      yum: name=rsync state=installed
+      yum: name=rsync state=latest
 
     - name: be sure httpd is installed
-      yum: name=httpd state=installed
+      yum: name=httpd state=latest
 
     - name: be sure httpd is running and enabled
       service: name=httpd state=started enabled=yes
 
-    - name: be sure emacs is installed
-      yum: name=emacs-24.3-18* state=installed
+    - name: install some programs for development
+      yum: name={{ item }} state=latest
+      with_items:
+        - epel-release
+        - gcc
+        - ncurses-devel
+        - libselinux-python
+        - unzip
+
+    - command: which emacs
+      register: emacs_exit_result
+      ignore_errors: true
+      become: no
+
+    - name: set emacs source file
+      copy: src=./src/emacs-24.3.tar.gz dest=/tmp/emacs-24.3.tar.gz
+      when: emacs_exit_result is failed
+
+    - name: unarchive emacs-24.3
+      unarchive:
+        src: /tmp/emacs-24.3.tar.gz
+        dest: /tmp/
+        remote_src: yes
+      when: emacs_exit_result is failed
+
+    - name: install emacs
+      command: '{{ item }} chdir="/tmp/emacs-24.3"'
+      with_items:
+        - ./configure
+        - make
+        - make install
+      when: emacs_exit_result is failed
 
     - name: set emacs config files
       copy: src=templates/emacs/.emacs.d dest=/home/vagrant/ owner=vagrant group=vagrant
 
     - name: be sure tmux is installed
-      yum: name=tmux state=installed
+      yum: name=tmux state=latest
 
     - name: set tmux config file
       copy: src=templates/tmux/.tmux.conf dest=/home/vagrant/.tmux.conf
 
     - name: be sure zsh is installed
-      yum: name=zsh state=installed
+      yum: name=zsh state=latest
 
     - name: get zsh path
       command: which zsh
-      sudo: no
       register: zsh_path
 
     - name: set zsh as default shell for vagrant user
@@ -37,12 +67,12 @@
       template: src=templates/zsh/.zshrc dest=/home/vagrant/.zshrc owner=vagrant group=vagrant
 
     - name: be sure git is installed
-      yum: name=git state=installed
+      yum: name=git state=latest
 
     - name: set emacs to git as default editor
       command: git config --global core.editor emacs
-      sudo: no
+      become: no
 
     - name: set color support to git
       command: git config --global color.ui true
-      sudo: no
+      become: no
